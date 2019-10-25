@@ -1,5 +1,6 @@
 #include "game.h"
 #include "raylib.h"
+#include "CustomMath.h"
 
 #include <iostream>
 
@@ -39,6 +40,10 @@ void game::Tick()
 		if(MB0)babyPhys.Collider = circle{ 15.0f };
 		else babyPhys.Collider = aabb{ {15,15} };
 	}
+
+	if (IsKeyPressed('w'))
+		for (physObject& p : PhysObjects)
+			p.Gravity = ABS(p.Gravity);
 }
 
 void game::TickPhys()
@@ -57,8 +62,13 @@ void game::TickPhys()
 		for (physObject& j : PhysObjects)
 		{
 			if (&i == &j) { continue; }
-			i.Collider.match([i, j](circle c) {if (CheckCircleX(i.pos, c, j.pos, j.Collider)) { std::cout << "Circle Collision!" << std::endl; } },
-							 [i, j](aabb a)   {if (CheckAABBX(i.pos, a, j.pos, j.Collider))   { std::cout << "AABB Collision!" << std::endl; }});
+
+			bool Collision = false;
+
+			i.Collider.match([i, j, &Collision](circle c) {if (CheckCircleX(i.pos, c, j.pos, j.Collider)) { Collision = true; } },
+				[i, j, &Collision](aabb a) {if (CheckAABBX(i.pos, a, j.pos, j.Collider)) { Collision = true; }});
+
+			if (Collision) { ResolvePhysBodies(i, j); }
 		}
 	}
 }

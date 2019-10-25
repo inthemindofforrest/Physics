@@ -14,6 +14,7 @@ public:
 
 	float mass;
 	float Drag;
+	float Gravity;
 
 	shape Collider;
 

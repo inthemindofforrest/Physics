@@ -1,6 +1,7 @@
 #include "shapes.h"
 
 #include "glm/glm.hpp"
+#include "physics.h"
 
 bool CheckCircleCircle(glm::vec2 _posA, circle _CircleA, glm::vec2 _posB, circle _CircleB)
 {
@@ -35,5 +36,45 @@ bool CheckCircleX(glm::vec2 _posA, circle _lhs, glm::vec2 _posB, shape _rhs)
 bool CheckAABBX(glm::vec2 _posA, aabb _lhs, glm::vec2 _posB, shape _rhs)
 {
 	return _rhs.match([_posA, _lhs, _posB](circle s) {return CheckCircleAABB(_posA, s, _posB, _lhs); },
-		              [_posA, _lhs, _posB](aabb s)   {return CheckAABBAABB(_posA, _lhs, _posB, s); });
+		              [_posA, _lhs, _posB](aabb a)   {return CheckAABBAABB(_posA, _lhs, _posB, a); });
+}
+
+void ResolvePhysBodies(physObject & _lhs, physObject & _rhs)
+{
+	glm::vec2 ResImpulse[2];
+
+	glm::vec2 Normal = { 0,0 };
+	float Pen = 0.0f;
+
+	Normal = _lhs.Collider.match([_lhs, _rhs, &Pen](circle c) 
+	{
+		float dist = glm::length(_lhs.pos - _rhs.pos);
+		float sum = _lhs.Collider.get<circle>().Radius + _rhs.Collider.get<circle>().Radius;
+
+		Pen = sum - dist;
+		return glm::vec2();
+	},
+		[_lhs, _rhs, &Pen](aabb a)
+	{
+		return glm::vec2();
+	}
+	);
+
+	ResolveCollision(_lhs.pos, _lhs.vel, _lhs.mass, _rhs.pos, _rhs.vel, _rhs.mass, 10.f, Normal, ResImpulse);
+
+	_lhs.pos += Normal * Pen;
+	_rhs.pos -= Normal * Pen;
+
+	_lhs.vel = ResImpulse[0];
+	_rhs.vel = ResImpulse[1];
+}
+
+void ResolveCollision(glm::vec2 _posA, glm::vec2 _velA, float _massA, glm::vec2 _posB, glm::vec2 _velB, float _massB, float _elasticity, glm::vec2 _normal, glm::vec2 * _dst)
+{
+	glm::vec2 RelVel = _velA - _velB;
+	float ImpulseMag = glm::dot(-(1.0f + _elasticity) * RelVel, _normal) / glm::dot(_normal, _normal * (1 / _massA + 1 / _massB));
+
+	_dst[0] = _velA + (ImpulseMag / _massA) * _normal;
+	_dst[1] = _velB - (ImpulseMag / _massB) * _normal;
+
 }

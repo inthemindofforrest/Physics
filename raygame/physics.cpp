@@ -8,7 +8,8 @@ physObject::physObject()
 	forces = { 0,0 };
 
 	mass = 1.0f;
-	Drag = 1.0f;
+	Drag = 0.0f;
+	Gravity = 9.80665f;
 }
 
 void physObject::TickPhysics(float delta)
@@ -22,11 +23,14 @@ void physObject::TickPhysics(float delta)
 
 	//intigrating velocity into position
 	pos += vel * delta;
+
+	AddForce({ 0,Gravity });
 }
 
 void physObject::Draw() const
 {
-	DrawCircleLines(pos.x, pos.y, 15.0f, GRAY);
+	Collider.match([this](circle c) {DrawCircleLines(pos.x, pos.y, c.Radius, GRAY); },
+		[this](aabb a) {DrawRectangleLines(pos.x - a.HalfExtents.x, pos.y - a.HalfExtents.y, a.HalfExtents.x * 2, a.HalfExtents.y * 2, GRAY); });
 }
 
 void physObject::AddForce(glm::vec2 force)
@@ -41,7 +45,7 @@ void physObject::AddImpulse(glm::vec2 impulse)
 
 void physObject::AddAccel(glm::vec2 accel)
 {
-	assert(false);
+	forces += accel;
 }
 
 void physObject::AddVelocityChange(glm::vec2 delta)
