@@ -27,6 +27,18 @@ void physObject::TickPhysics(float delta)
 	AddForce({ 0,Gravity });
 }
 
+void physObject::WrapScreen()
+{
+	Collider.match([this](circle c){ if (pos.y > GetScreenHeight() + c.Radius)			pos.y = 0 - c.Radius;
+									 if (pos.y < 0 - c.Radius)							pos.y = GetScreenHeight() + c.Radius;
+									 if (pos.x > GetScreenWidth() + c.Radius)			pos.x = 0 - c.Radius;
+									 if (pos.x < 0 - c.Radius)							pos.x = GetScreenWidth() + c.Radius; },
+				   [this](aabb a){	 if (pos.y > GetScreenHeight() + a.HalfExtents.y)	pos.y = 0 - a.HalfExtents.y;
+									 if (pos.y < 0 - a.HalfExtents.y)					pos.y = GetScreenHeight() + a.HalfExtents.y;
+									 if (pos.x > GetScreenWidth() + a.HalfExtents.x)	pos.x = 0 - a.HalfExtents.x;
+									 if (pos.x < 0 - a.HalfExtents.x)					pos.x = GetScreenWidth() + a.HalfExtents.x; });
+}
+
 void physObject::Draw() const
 {
 	Collider.match([this](circle c) {DrawCircleLines(pos.x, pos.y, c.Radius, GRAY); },

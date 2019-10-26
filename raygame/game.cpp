@@ -40,10 +40,6 @@ void game::Tick()
 		if(MB0)babyPhys.Collider = circle{ 15.0f };
 		else babyPhys.Collider = aabb{ {15,15} };
 	}
-
-	if (IsKeyPressed('w'))
-		for (physObject& p : PhysObjects)
-			p.Gravity = ABS(p.Gravity);
 }
 
 void game::TickPhys()
@@ -55,6 +51,8 @@ void game::TickPhys()
 	for (physObject& i : PhysObjects)
 	{
 		i.TickPhysics(TargetFixedStep);
+
+		i.WrapScreen();
 	}
 
 	for (physObject& i : PhysObjects)

@@ -19,6 +19,7 @@ public:
 	shape Collider;
 
 	void TickPhysics(float delta);
+	void WrapScreen();
 	void Draw() const;
 
 	//Add a constant force with respect to mass

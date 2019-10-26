@@ -41,6 +41,22 @@ bool CheckAABBX(glm::vec2 _posA, aabb _lhs, glm::vec2 _posB, shape _rhs)
 
 void ResolvePhysBodies(physObject & _lhs, physObject & _rhs)
 {
+	/* 
+		       _____  _____
+		      /     \/     \
+		     |      /\      |
+			 |   |------|   |   -Circles colliding with the centers measured out
+		     |      \/      |
+		      \_____/\_____/
+		
+			 |--------------|   -Length of Radius of balls combines
+			 |------|	        -Difference in Centers of balls
+		   - __________________
+			        |-------|   -Difference of the Radius sum and the Distance of the ball's radius
+
+		Difference between the two Circles (That force is applied to the two circles to seperate them)
+		That is then applied to the positions and velocity to seperate them instantally and push the objects apart
+		*/
 	glm::vec2 ResImpulse[2];
 
 	glm::vec2 Normal = { 0,0 };
@@ -52,15 +68,16 @@ void ResolvePhysBodies(physObject & _lhs, physObject & _rhs)
 		float sum = _lhs.Collider.get<circle>().Radius + _rhs.Collider.get<circle>().Radius;
 
 		Pen = sum - dist;
-		return glm::vec2();
+		return glm::normalize(_lhs.pos - _rhs.pos);
 	},
 		[_lhs, _rhs, &Pen](aabb a)
 	{
+		assert(false);
 		return glm::vec2();
 	}
 	);
 
-	ResolveCollision(_lhs.pos, _lhs.vel, _lhs.mass, _rhs.pos, _rhs.vel, _rhs.mass, 10.f, Normal, ResImpulse);
+	ResolveCollision(_lhs.pos, _lhs.vel, _lhs.mass, _rhs.pos, _rhs.vel, _rhs.mass, 1.0f, Normal, ResImpulse);
 
 	_lhs.pos += Normal * Pen;
 	_rhs.pos -= Normal * Pen;
