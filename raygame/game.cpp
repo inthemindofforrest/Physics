@@ -37,8 +37,10 @@ void game::Tick()
 		Vector2 mousePos = GetMousePosition();
 		babyPhys.pos = { mousePos.x, mousePos.y };
 
-		if(MB0)babyPhys.Collider = circle{ 15.0f };
-		else babyPhys.Collider = aabb{ {15,15} };
+		babyPhys.Collider = circle{ 15.0f };
+		if (!MB0)babyPhys.isTrigger = true;
+		//if(MB0)babyPhys.Collider = circle{ 15.0f };
+		//else babyPhys.Collider = aabb{ {15,15} };
 	}
 }
 
@@ -66,7 +68,7 @@ void game::TickPhys()
 			i.Collider.match([i, j, &Collision](circle c) {if (CheckCircleX(i.pos, c, j.pos, j.Collider)) { Collision = true; } },
 				[i, j, &Collision](aabb a) {if (CheckAABBX(i.pos, a, j.pos, j.Collider)) { Collision = true; }});
 
-			if (Collision) { ResolvePhysBodies(i, j); }
+			if (!i.isTrigger && !j.isTrigger && Collision) { ResolvePhysBodies(i, j); }
 		}
 	}
 }

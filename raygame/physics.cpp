@@ -10,6 +10,8 @@ physObject::physObject()
 	mass = 1.0f;
 	Drag = 0.0f;
 	Gravity = 9.80665f;
+
+	isTrigger = false;
 }
 
 void physObject::TickPhysics(float delta)
@@ -41,7 +43,7 @@ void physObject::WrapScreen()
 
 void physObject::Draw() const
 {
-	Collider.match([this](circle c) {DrawCircleLines(pos.x, pos.y, c.Radius, GRAY); },
+	Collider.match([this](circle c) {if(isTrigger) DrawCircleLines(pos.x, pos.y, c.Radius, GRAY); else DrawCircleLines(pos.x, pos.y, c.Radius, RED); },
 		[this](aabb a) {DrawRectangleLines(pos.x - a.HalfExtents.x, pos.y - a.HalfExtents.y, a.HalfExtents.x * 2, a.HalfExtents.y * 2, GRAY); });
 }
 

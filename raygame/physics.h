@@ -16,6 +16,7 @@ public:
 	float Drag;
 	float Gravity;
 
+	bool isTrigger;
 	shape Collider;
 
 	void TickPhysics(float delta);
