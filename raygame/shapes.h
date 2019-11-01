@@ -26,3 +26,5 @@ void ResolvePhysBodies(class physObject& _lhs, class physObject& _rhs);
 void ResolveCollision(glm::vec2 _posA, glm::vec2 _velA, float _massA,
 					  glm::vec2 _posB, glm::vec2 _velB, float _massB,
 	                  float _elasticity, glm::vec2 _normal, glm::vec2* _dst);
+
+float AABBCirclePen(physObject _lhs, physObject _rhs);

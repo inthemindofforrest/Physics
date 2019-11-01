@@ -37,10 +37,8 @@ void game::Tick()
 		Vector2 mousePos = GetMousePosition();
 		babyPhys.pos = { mousePos.x, mousePos.y };
 
-		babyPhys.Collider = circle{ 15.0f };
-		if (!MB0)babyPhys.isTrigger = true;
-		//if(MB0)babyPhys.Collider = circle{ 15.0f };
-		//else babyPhys.Collider = aabb{ {15,15} };
+		if(MB0)babyPhys.Collider = circle{ 15.0f };
+		else babyPhys.Collider = aabb{ {15,15} };
 	}
 }
 

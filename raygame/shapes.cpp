@@ -62,18 +62,33 @@ void ResolvePhysBodies(physObject & _lhs, physObject & _rhs)
 	glm::vec2 Normal = { 0,0 };
 	float Pen = 0.0f;
 
-	Normal = _lhs.Collider.match([_lhs, _rhs, &Pen](circle c) 
+	Normal = _lhs.Collider.match([_lhs, _rhs, &Pen](circle c)
 	{
-		float dist = glm::length(_lhs.pos - _rhs.pos);
-		float sum = _lhs.Collider.get<circle>().Radius + _rhs.Collider.get<circle>().Radius;
+		return _rhs.Collider.match([_lhs, _rhs, &Pen](circle c)
+		{
+			float dist = glm::length(_lhs.pos - _rhs.pos);
+			float sum = _lhs.Collider.get<circle>().Radius + _rhs.Collider.get<circle>().Radius;
 
-		Pen = sum - dist;
-		return glm::normalize(_lhs.pos - _rhs.pos);
+			Pen = sum - dist;
+			return glm::normalize(_lhs.pos - _rhs.pos);
+		},
+			[_lhs, _rhs, &Pen](aabb a)
+		{
+			Pen = AABBCirclePen(_rhs, _lhs);
+			return glm::normalize(_rhs.pos - _lhs.pos);
+		});
 	},
 		[_lhs, _rhs, &Pen](aabb a)
 	{
-		assert(false);
-		return glm::vec2();
+		return _rhs.Collider.match([_lhs, _rhs, &Pen](circle c)
+		{
+			Pen = AABBCirclePen(_lhs, _rhs);
+			return glm::normalize(_lhs.pos - _rhs.pos);
+		},
+			[_lhs, _rhs, &Pen](aabb a)
+		{
+			return glm::vec2();//TODO Create AABB and AABB
+		});
 	}
 	);
 
@@ -94,4 +109,50 @@ void ResolveCollision(glm::vec2 _posA, glm::vec2 _velA, float _massA, glm::vec2 
 	_dst[0] = _velA + (ImpulseMag / _massA) * _normal;
 	_dst[1] = _velB - (ImpulseMag / _massB) * _normal;
 
+}
+
+float AABBCirclePen(physObject _lhs, physObject _rhs)
+{
+	glm::vec2 HalfExtent = _lhs.Collider.get<aabb>().HalfExtents;
+
+	//If x > y  f(x) = y/x * d ELSE f(x) = x/y * d
+	glm::vec2 NormDirection = glm::normalize(_lhs.pos - _rhs.pos);
+	glm::vec2 PointInside = NormDirection * _rhs.Collider.get<circle>().Radius;
+	glm::vec2 ABSNormalDir = glm::abs(NormDirection);
+
+	if (ABSNormalDir.y > ABSNormalDir.x)//(Top/Bottom) 
+	{
+		if (PointInside.y >= 0)//Bottom
+		{
+			float BottomEdgeY = _lhs.pos.y + HalfExtent.y;
+			float DistanceFromBottomEdge = glm::abs(BottomEdgeY - (_lhs.pos.y + PointInside.y));
+			float NewX = PointInside.x + (PointInside.x / PointInside.y) * DistanceFromBottomEdge;//Point.y + (x/y) * d
+			return glm::length(glm::vec2(_lhs.pos.x + NewX, BottomEdgeY));
+		}
+		else//Top
+		{
+			float TopEdgeY = _lhs.pos.y - HalfExtent.y;
+			float DistanceFromTopEdge = glm::abs((PointInside.y) + TopEdgeY);
+			float NewX = (PointInside.x / PointInside.y) * DistanceFromTopEdge + _rhs.pos.x;//Point.y + (x/y) * d
+			return glm::length(_lhs.pos.x + PointInside - glm::vec2(NewX, TopEdgeY));
+		}
+	}
+	else//(Left/Right)
+	{
+		if (PointInside.x >= 0)//Right
+		{
+			float TopEdgeX = _lhs.pos.x + HalfExtent.x;
+			float DistanceFromRightEdge = glm::abs((_lhs.pos.x + PointInside.y) - TopEdgeX);
+			float NewY = PointInside.y + (PointInside.y / PointInside.x) * DistanceFromRightEdge;//Point.y + (x/y) * d
+			return glm::length(PointInside - glm::vec2(TopEdgeX, _lhs.pos.y + NewY));
+		}
+		else//Left
+		{
+			float BottomEdgeX = _lhs.pos.x - HalfExtent.x;
+			float DistanceFromLeftEdge = glm::abs(BottomEdgeX - (_lhs.pos.x + PointInside.x));
+			float NewY = PointInside.y + (PointInside.y / PointInside.x) * DistanceFromLeftEdge;//Point.y + (x/y) * d
+			return glm::length(glm::vec2(BottomEdgeX, _lhs.pos.y + NewY));
+		}
+
+	}
 }

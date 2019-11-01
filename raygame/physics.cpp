@@ -9,7 +9,7 @@ physObject::physObject()
 
 	mass = 1.0f;
 	Drag = 0.0f;
-	Gravity = 9.80665f;
+	Gravity = 9.80665f * 10;
 
 	isTrigger = false;
 }
